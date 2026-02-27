@@ -3,7 +3,7 @@ import { addLocation, deleteLocation, getLocations, getWeather } from '../contro
 import { checkFeedbackStatus, getAllFeedback, submitFeedback } from '../controllers/feedbackController.js';
 import { updateMicrosoftConfig } from '../controllers/configController.js';
 import { sendAlert } from '../controllers/emailController.js';
-
+import { io } from '../index.js';
 const router = Router();
 
 // Weather Routes
@@ -18,4 +18,10 @@ router.post('/notify', sendAlert);
 router.get('/feedback/check', checkFeedbackStatus); // 👈 THIS IS PROBABLY MISSING
 router.get('/feedback', getAllFeedback);
 
+
+router.post('/notify-manual', (req, res) => {
+    const { title, body } = req.body;
+    io.emit('weather_alert', { title, body });
+    res.json({ success: true });
+});
 export default router;
