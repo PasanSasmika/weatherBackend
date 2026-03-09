@@ -52,7 +52,10 @@ export const startScheduler = () => {
                 
                 // This is where the API call happens
                 const weatherData: any = await fetchAndFormatWeather(loc.latitude, loc.longitude, loc.id);
-                
+                await pool.query(
+        'INSERT INTO weather_cache (location_id, weather_data) VALUES (?, ?) ON DUPLICATE KEY UPDATE weather_data = ?',
+        [loc.id, JSON.stringify(weatherData), JSON.stringify(weatherData)]
+    );
                 // 📝 CONSOLE LOG THE DATA
                 console.log(`   ✅ Data Received for ${loc.name}:`);
                 console.log(`      🌡️ Temp: ${weatherData.current?.temp}°C`);
@@ -65,8 +68,13 @@ export const startScheduler = () => {
                 const rainRisk = futureHours.slice(0, 2).find((h: any) => h.rain_prob > 15);
 
                 if (rainRisk) {
-                    const tLabel = new Date(rainRisk.time).toLocaleTimeString([], { hour: 'numeric', hour12: true });
-                    console.log(`   🚨 ALERT TRIGGERED: ${rainRisk.rain_prob}% rain at ${tLabel}`);
+                   const tLabel = new Date(rainRisk.time).toLocaleTimeString('en-US', { 
+    timeZone: 'Asia/Colombo', 
+    hour: 'numeric', 
+    hour12: true 
+});
+
+                 console.log(`   🚨 ALERT TRIGGERED: ${rainRisk.rain_prob}% rain at ${tLabel}`);
                     
                     io.emit('weather_alert', { 
                         title: `🌧️ Rain Alert: ${loc.name}`, 
@@ -102,7 +110,11 @@ export const startScheduler = () => {
                     .filter((h: any) => new Date(h.time) > now)
                     .slice(0, 6)
                     .map((h: any) => {
-                        const t = new Date(h.time).toLocaleTimeString([], { hour: 'numeric', hour12: true });
+                        const t = new Date(h.time).toLocaleTimeString('en-US', { 
+    timeZone: 'Asia/Colombo', 
+    hour: 'numeric', 
+    hour12: true 
+});
                         return `${t}: ${h.rain_prob}%`;
                     }).join(' | ');
 
